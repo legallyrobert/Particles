@@ -1,2 +1,2 @@
 # Particles
-## An n-body simulation
+## An 2-body simulation
