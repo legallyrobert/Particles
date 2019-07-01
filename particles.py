@@ -1,26 +1,23 @@
 #! /usr/local/bin/python3
-
-import numpy as np
 import math
 
 class Particle(object):
     def __init__(self, currentPos, mass, charge):
-        # a particle has a static mass:
         self.mass = mass
-
-        # a particle has a charge [positive: 1, negative: -1]:
         self.charge = charge
 
         # a particle has a current position, dependant on the previous position.
-        # represented as a numpy array for easy cross products, vector additions
         self.previousPos = currentPos
         self.currentPos  = currentPos
-        self.futurePos   = currentPos
 
         # a particle has a current velocity, dependant on the previous velocity
 
         # a particle is non-static by default.
         self.static = False
+
+    def getPos(self, d):
+        return self.currentPos[d]
+        
 
 class Simulation(object):
     def __init__(self, particle1, particle2):
@@ -29,11 +26,12 @@ class Simulation(object):
         self.p2 = particle2
 
     # get distance between two particles using pythagorean theorem
-    def distances(self, pos1, pos2):
-        x = pos1[0] - pos2[0]
-        y = pos1[1] - pos2[1]
-        z = pos1[2] - pos2[2]
+    def distance(self, p1, p2):
+        x = p1.getPos(0) - p2.getPos(0) 
+        y = p1.getPos(1) - p2.getPos(1) 
+        z = p1.getPos(2) - p2.getPos(2) 
 
+        # magnitude of distance vector \sqrt{x^2 + y^2 + z^2}
         distance = math.sqrt((math.pow(x, 2) + math.pow(y, 2) + math.pow(z, 2)))
 
         return distance
@@ -44,25 +42,48 @@ class Simulation(object):
         p1 = self.particle1
         p2 = self.particle2
         top = self.K * p1.charge() * p2.charge()
-        bottom = math.pow(self.distances(p1.currentPos(), p2.currentPos()), 2)
+        bottom = math.pow(self.distance(p1, p2), 2)
         F = top/bottom
+        distance = math.fabs(self.distance(p1, p2))
+        fx = math.fabs(F * ((p1.getPos(0) - p2.getPos(0)/distance)))
+        fy = math.fabs(F * ((p1.getPos(1) - p2.getPos(1)/distance)))
+        fz = math.fabs(F * ((p1.getPos(2) - p2.getPos(2)/distance)))
 
+        if (p1.charge() * p2.charge()) > 0: #same charges -> repulsive forces
+            # particles should accelerate away from each other
+            # [fx, fy, fz] should be changed accordingly
+            # if p1 coordinates are less than that of p2,
+            # make the corresponding force negative to increase the
+            # distance between the two particles
+            if p1.getPos(0) < p2.getPos(0):
+                fx *= -1
+            if p1.getPos(1) < p2.getPos(1):
+                fy *= -1
+            if p1.getPos(2) < p2.getPos(2):
+                fz *= -1
 
+        else: # attractive forces
+            # particles should accelerate towards each other
+            # [fx, fy, fz] should be changed accordingly
+            # if p1 coordinates are greater than that of p2,
+            # make the orresponding force negative to decrease the
+            # distance between the two particles.
+            if p1.getPos(0) > p2.getPos(0):
+                fx *= -1
+            if p1.getPos(1) > p2.getPos(1):
+                fy *= -1
+            if p1.getPos(2) > p2.getPos(2):
+                fz *= -1
+
+        return [fx, fy, fz]
+
+    # returns two forces, that of p1 on p2 and that of p2 on p1
+    # e.g. [[p1fx, p1fy, p1fz], [p2fx, p2fy, p2fz]]
+    def accumulateForces(self, p1, p2):
+        return [self.coulomb(p1,p2), self.coulomb(p2, p1)]
 
 '''
-    # need a collisions checker for simulating with boundaries
-    def collisions(self, currentPos?):
-        if xpos == maxsize || xpos == 0:
-            xvel = -xvel
-        if ypos == maxsize || ypos == 0:
-            yvel = -yvel
-        if zpos == maxsize || zpos == 0:
-            zvel = -zvel
-    # collision checking has to run per time step, after position is updated
-
 Game plan:
-
-
     A particle's delta x per time step is the result of the forces interacting
     between particles. Working backwards:
         We have ma = F = [(k*Q1*Q2)/d^2] ??
@@ -70,10 +91,10 @@ Game plan:
 
     Start with distance between two particles in XYZ given by pythagorean theorem?
         done
-'''
+    Use distance in Coulomb's Law to calculate forces between particles
+        done
+    Accumulate forces to be used in calculating accelerations of particles?
 
-
-'''
 The simulation will be visualized using a 3D plot at a later time
     e.g. ./simple_3danim.py,
     from https://matplotlib.org/1.4.2/examples/animation/simple_3danim.html
