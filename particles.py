@@ -42,38 +42,45 @@ class Simulation(object):
         p1 = self.particle1
         p2 = self.particle2
         top = self.K * p1.charge() * p2.charge()
-        bottom = math.pow(self.distance(p1, p2), 2)
-        F = top/bottom
-        distance = math.fabs(self.distance(p1, p2))
-        fx = math.fabs(F * ((p1.getPos(0) - p2.getPos(0)/distance)))
-        fy = math.fabs(F * ((p1.getPos(1) - p2.getPos(1)/distance)))
-        fz = math.fabs(F * ((p1.getPos(2) - p2.getPos(2)/distance)))
+        bottom = math.pow(self.distance(p1, p2), 2) # may need raised to the third power?
+        F = top/bottom # * r vector?
 
-        if (p1.charge() * p2.charge()) > 0: #same charges -> repulsive forces
-            # particles should accelerate away from each other
-            # [fx, fy, fz] should be changed accordingly
-            # if p1 coordinates are less than that of p2,
-            # make the corresponding force negative to increase the
-            # distance between the two particles
-            if p1.getPos(0) < p2.getPos(0):
-                fx *= -1
-            if p1.getPos(1) < p2.getPos(1):
-                fy *= -1
-            if p1.getPos(2) < p2.getPos(2):
-                fz *= -1
+        # r vector = self.distance(p1, p2)
 
-        else: # attractive forces
-            # particles should accelerate towards each other
-            # [fx, fy, fz] should be changed accordingly
-            # if p1 coordinates are greater than that of p2,
-            # make the orresponding force negative to decrease the
-            # distance between the two particles.
-            if p1.getPos(0) > p2.getPos(0):
-                fx *= -1
-            if p1.getPos(1) > p2.getPos(1):
-                fy *= -1
-            if p1.getPos(2) > p2.getPos(2):
-                fz *= -1
+
+        # Questionable from here on out. May need re-worked depending on "vectorization"
+        # of F.
+        #distance = math.fabs(self.distance(p1, p2)) # fabs: floating point absolute value
+        #fx = math.fabs(F * ((p1.getPos(0) - p2.getPos(0)/distance)))
+        #fy = math.fabs(F * ((p1.getPos(1) - p2.getPos(1)/distance)))
+        #fz = math.fabs(F * ((p1.getPos(2) - p2.getPos(2)/distance)))
+
+        # the following depends on fx, fy, fz. May also need reworked.
+        #if (p1.charge() * p2.charge()) > 0: #same charges -> repulsive forces
+        #    # particles should accelerate away from each other
+        #    # [fx, fy, fz] should be changed accordingly
+        #    # if p1 coordinates are less than that of p2,
+        #    # make the corresponding force negative to increase the
+        #    # distance between the two particles
+        #    if p1.getPos(0) < p2.getPos(0):
+        #        fx *= -1
+        #    if p1.getPos(1) < p2.getPos(1):
+        #        fy *= -1
+        #    if p1.getPos(2) < p2.getPos(2):
+        #        fz *= -1
+
+        #else: # attractive forces
+        #    # particles should accelerate towards each other
+        #    # [fx, fy, fz] should be changed accordingly
+        #    # if p1 coordinates are greater than that of p2,
+        #    # make the orresponding force negative to decrease the
+        #    # distance between the two particles.
+        #    if p1.getPos(0) > p2.getPos(0):
+        #        fx *= -1
+        #    if p1.getPos(1) > p2.getPos(1):
+        #        fy *= -1
+        #    if p1.getPos(2) > p2.getPos(2):
+        #        fz *= -1
 
         return [fx, fy, fz]
 
