@@ -2,22 +2,23 @@
 import math
 
 class Particle(object):
-    def __init__(self, currentPos, mass, charge):
-        self.mass = mass
+    def __init__(self, charge, mass, force, initialVel, initialPos):
         self.charge = charge
+        self.mass = mass
 
-        # a particle has a current position, dependant on the previous position.
-        self.previousPos = currentPos
-        self.currentPos  = currentPos
+        self.force = force
 
         # a particle has a current velocity, dependant on the previous velocity
+        self.initialVel = initialVel
+        self.currentVel = initialVel
+
+        # a particle has a current position, dependant on the previous position.
+        self.initialPos = initialPos
+        self.currentPos = initialPos
 
         # a particle is non-static by default.
         self.static = False
 
-    def getPos(self, d):
-        return self.currentPos[d]
-        
 
 class Simulation(object):
     def __init__(self, particle1, particle2):
@@ -27,9 +28,9 @@ class Simulation(object):
 
     # get distance between two particles using pythagorean theorem
     def distance(self, p1, p2):
-        x = p1.getPos(0) - p2.getPos(0) 
-        y = p1.getPos(1) - p2.getPos(1) 
-        z = p1.getPos(2) - p2.getPos(2) 
+        x = p1.currentPos[0] - p2.currentPos[0] 
+        y = p1.currentPos[1] - p2.currentPos[1] 
+        z = p1.currentPos[2] - p2.currentPos[2] 
 
         # magnitude of distance vector \sqrt{x^2 + y^2 + z^2}
         distance = math.sqrt((math.pow(x, 2) + math.pow(y, 2) + math.pow(z, 2)))
@@ -38,51 +39,37 @@ class Simulation(object):
 
     # get force between two particles from Coulomb's Law:
     #   F = kQ1Q2/r^2
-    def coulomb(self, particle1, particle2):
-        p1 = self.particle1
-        p2 = self.particle2
-        top = self.K * p1.charge() * p2.charge()
-        bottom = math.pow(self.distance(p1, p2), 2) # may need raised to the third power?
-        F = top/bottom # * r vector?
+    def coulomb(self, p1, p2):
+        self.p1 = p1
+        self.p2 = p2
+        top = self.K * p1.charge * p2.charge
+        bottom = math.pow(self.distance(p1, p2), 3) # changed to third power from second
+        F = top/bottom
 
-        # r vector = self.distance(p1, p2)
+        fx = math.fabs(F * (p1.currentPos[0] - p2.currentPos[0]))
+        fy = math.fabs(F * (p1.currentPos[1] - p2.currentPos[1]))
+        fz = math.fabs(F * (p1.currentPos[2] - p2.currentPos[2]))
 
+        p1.force = [fx, fy, fz]
+        return p1.force
 
-        # Questionable from here on out. May need re-worked depending on "vectorization"
-        # of F.
-        #distance = math.fabs(self.distance(p1, p2)) # fabs: floating point absolute value
-        #fx = math.fabs(F * ((p1.getPos(0) - p2.getPos(0)/distance)))
-        #fy = math.fabs(F * ((p1.getPos(1) - p2.getPos(1)/distance)))
-        #fz = math.fabs(F * ((p1.getPos(2) - p2.getPos(2)/distance)))
+    def velocity(self, particle):
+        # velocity vector = (force vector * time step)/mass + initial velocity vector
+        self.particle = particle
+        vx = ((particle.forces[0]*TIMESTEP)/particle.mass)+particle.initialVel[0]
+        vy = ((particle.forces[1]*TIMESTEP)/particle.mass)+particle.initialVel[1]
+        vz = ((particle.forces[2]*TIMESTEP)/particle.mass)+particle.initialVel[2]
 
-        # the following depends on fx, fy, fz. May also need reworked.
-        #if (p1.charge() * p2.charge()) > 0: #same charges -> repulsive forces
-        #    # particles should accelerate away from each other
-        #    # [fx, fy, fz] should be changed accordingly
-        #    # if p1 coordinates are less than that of p2,
-        #    # make the corresponding force negative to increase the
-        #    # distance between the two particles
-        #    if p1.getPos(0) < p2.getPos(0):
-        #        fx *= -1
-        #    if p1.getPos(1) < p2.getPos(1):
-        #        fy *= -1
-        #    if p1.getPos(2) < p2.getPos(2):
-        #        fz *= -1
+        particle.currentVel = [vx, vy, vz]
+        return particle.currentVel 
 
-        #else: # attractive forces
-        #    # particles should accelerate towards each other
-        #    # [fx, fy, fz] should be changed accordingly
-        #    # if p1 coordinates are greater than that of p2,
-        #    # make the orresponding force negative to decrease the
-        #    # distance between the two particles.
-        #    if p1.getPos(0) > p2.getPos(0):
-        #        fx *= -1
-        #    if p1.getPos(1) > p2.getPos(1):
-        #        fy *= -1
-        #    if p1.getPos(2) > p2.getPos(2):
-        #        fz *= -1
+    def updatePosition(self, particle):
+        self.particle = particle
+        dx = particle.currentVel[0] * TIMESTEP
+        dy = particle.currentVel[1] * TIMESTEP
+        dz = particle.currentVel[2] * TIMESTEP
+        # might be dumb but where to go from here? it's 3:45AM and i'm sleepy
 
-        return [fx, fy, fz]
 
     # returns two forces, that of p1 on p2 and that of p2 on p1
     # e.g. [[p1fx, p1fy, p1fz], [p2fx, p2fy, p2fz]]
@@ -90,18 +77,6 @@ class Simulation(object):
         return [self.coulomb(p1,p2), self.coulomb(p2, p1)]
 
 '''
-Game plan:
-    A particle's delta x per time step is the result of the forces interacting
-    between particles. Working backwards:
-        We have ma = F = [(k*Q1*Q2)/d^2] ??
-        From there, I'm sure we can calculate the velocity yada yada
-
-    Start with distance between two particles in XYZ given by pythagorean theorem?
-        done
-    Use distance in Coulomb's Law to calculate forces between particles
-        done
-    Accumulate forces to be used in calculating accelerations of particles?
-
 The simulation will be visualized using a 3D plot at a later time
     e.g. ./simple_3danim.py,
     from https://matplotlib.org/1.4.2/examples/animation/simple_3danim.html
