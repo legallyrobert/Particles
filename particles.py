@@ -1,12 +1,13 @@
 #! /usr/local/bin/python3
-import math
+import numpy as np
+from scipy import constants as sci
 
 class Particle(object):
     def __init__(self,charge,mass,initialVel,initialPos):
         self.charge=charge
         self.mass=mass
 
-        self.force=[0,0,0] # determined and replaced by Simulation.forces()
+        self.force=np.zeros([3,1])
 
         self.initialVel=initialVel
         self.currentVel=initialVel
@@ -18,33 +19,45 @@ class Particle(object):
 
 class Simulation(object):
     def __init__(self,p1,p2):
-        self.K=8.99*math.pow(10,9)
+        self.K=1/(4*sci.pi*sci.epsilon_0)
         self.p1=p1
         self.p2=p2
+        self.d=np.subtract(self.p1.currentPos,self.p2.currentPos)
+        self.r=np.linalg.norm(self.d)
+        self.r_hat=self.d/self.r
 
-    def distance(self, p1, p2):
-        x=self.p1.currentPos[0]-self.p2.currentPos[0]
-        y=self.p1.currentPos[1]-self.p2.currentPos[1]
-        z=self.p1.currentPos[2]-self.p2.currentPos[2]
+    def coulomb(self):
+        top=(self.K
+                *self.p1.charge
+                *self.p2.charge
+                *(self.r_hat/self.r)
+                )
+        bottom=np.power(self.r,2)
 
-        return math.sqrt(math.pow(x,2)+math.pow(y,2)+math.pow(z,2))
+        self.p1.force=top/bottom
+        self.p2.force=np.negative(self.p1.force)
+        
+    def magnetism(self):
+        top=(sci.mu_0*self.p1.charge*np.cross(
+            self.p1.currentVel,
+            self.r_hat/self.r,
+            axis=0) # define vectors along first axis, rather than last
+            )
+        bottom=(4*sci.pi*np.power(self.r,2))
+        B=top/bottom
 
-    def forces(self):
-        top=self.K*self.p1.charge*self.p2.charge
-        bottom=math.pow(self.distance(self.p1,self.p2),3)#changed to third power from second
-        F=top/bottom
+        F=(self.p1.charge*np.cross(
+            self.p1.currentVel,
+            B,
+            axis=0)
+            )
 
-        for i in range(0,3):
-            self.p1.force[i]=(
-                    math.fabs(
-                        F*(
-                            self.p1.currentPos[i]
-                            -self.p2.currentPos[i]
-                            )
-                        )
-                    )
+        self.p1.force=np.add(self.p1.force, F)
+        self.p2.force=np.negative(self.p1.force)
 
-        self.p2.force=[-x for x in self.p1.force]
+    def accumulateForces(self):
+        self.coulomb()
+        self.magnetism()
 
     '''
     def velocities(self):
@@ -91,20 +104,36 @@ class Simulation(object):
     '''
 
 def main():
-    # standard electric charge of proton, -e for electron
-    e = 1.602*math.pow(10, -19)
 
-    proton   = Particle(e, 1.6726219*math.pow(10, -27), [0,0,0], [1,0,0])
-    electron = Particle(-e, 9.10938356*math.pow(10, -31), [0,0,0], [0,0,0])
+    #Initial velocity np arrays
+    v1 = np.zeros([3,1])
+    v2 = np.zeros([3,1])
+
+    #Initial position np arrays
+    p1 = np.zeros([3,1])
+    p2 = np.zeros([3,1])
+
+    #Set velocity
+    v1[0] = 1
+    #Set position
+    p1[0] = 1
+
+    proton   = Particle(sci.e, sci.m_p, v1, p1)
+    electron = Particle(-sci.e, sci.m_e, v2, p2)
     
     simulation = Simulation(proton, electron)
-    simulation.forces()
+    simulation.accumulateForces()
 
-    print("Force from proton to electron: %s" %proton.force)
-    print("Force from electron to proton: %s" %electron.force)
+    print("Force from proton to electron:\n%s" %proton.force)
+    print("Force from electron to proton:\n%s" %electron.force)
 
 if __name__ == '__main__':
     main()
+else:
+    print("Particle initialization format:\n")
+    print("p = particles.Particle(Q, m, v_i, u_i)\n")
+    print("where\tv_i = [vi_x, vi_y, vi_z],\n\tu_i = [x_i, y_i, z_i],")
+    print("\tand are defined as 3x1 numpy arrays\n\t\te.g. v_i = np.ones([3,1])")
 
 '''
 The simulation will be visualized using a 3D plot at a later time
