@@ -2,79 +2,109 @@
 import math
 
 class Particle(object):
-    def __init__(self, charge, mass, force, initialVel, initialPos):
-        self.charge = charge
-        self.mass = mass
+    def __init__(self,charge,mass,initialVel,initialPos):
+        self.charge=charge
+        self.mass=mass
 
-        self.force = force
+        self.force=[0,0,0] # determined and replaced by Simulation.forces()
 
-        # a particle has a current velocity, dependant on the previous velocity
-        self.initialVel = initialVel
-        self.currentVel = initialVel
+        self.initialVel=initialVel
+        self.currentVel=initialVel
 
-        # a particle has a current position, dependant on the previous position.
-        self.initialPos = initialPos
-        self.currentPos = initialPos
+        self.initialPos=initialPos
+        self.currentPos=initialPos
 
-        # a particle is non-static by default.
-        self.static = False
-
+        self.static=False
 
 class Simulation(object):
-    def __init__(self, particle1, particle2):
-        self.K = 8.99 * math.pow(10, 9)
-        self.p1 = particle1
-        self.p2 = particle2
+    def __init__(self,p1,p2):
+        self.K=8.99*math.pow(10,9)
+        self.p1=p1
+        self.p2=p2
 
-    # get distance between two particles using pythagorean theorem
     def distance(self, p1, p2):
-        x = p1.currentPos[0] - p2.currentPos[0] 
-        y = p1.currentPos[1] - p2.currentPos[1] 
-        z = p1.currentPos[2] - p2.currentPos[2] 
+        x=self.p1.currentPos[0]-self.p2.currentPos[0]
+        y=self.p1.currentPos[1]-self.p2.currentPos[1]
+        z=self.p1.currentPos[2]-self.p2.currentPos[2]
 
-        # magnitude of distance vector \sqrt{x^2 + y^2 + z^2}
-        distance = math.sqrt((math.pow(x, 2) + math.pow(y, 2) + math.pow(z, 2)))
+        return math.sqrt(math.pow(x,2)+math.pow(y,2)+math.pow(z,2))
 
-        return distance
+    def forces(self):
+        top=self.K*self.p1.charge*self.p2.charge
+        bottom=math.pow(self.distance(self.p1,self.p2),3)#changed to third power from second
+        F=top/bottom
 
-    # get force between two particles from Coulomb's Law:
-    #   F = kQ1Q2/r^2
-    def coulomb(self, p1, p2):
-        self.p1 = p1
-        self.p2 = p2
-        top = self.K * p1.charge * p2.charge
-        bottom = math.pow(self.distance(p1, p2), 3) # changed to third power from second
-        F = top/bottom
+        for i in range(0,3):
+            self.p1.force[i]=(
+                    math.fabs(
+                        F*(
+                            self.p1.currentPos[i]
+                            -self.p2.currentPos[i]
+                            )
+                        )
+                    )
 
-        fx = math.fabs(F * (p1.currentPos[0] - p2.currentPos[0]))
-        fy = math.fabs(F * (p1.currentPos[1] - p2.currentPos[1]))
-        fz = math.fabs(F * (p1.currentPos[2] - p2.currentPos[2]))
+        self.p2.force=[-x for x in self.p1.force]
 
-        p1.force = [fx, fy, fz]
-        return p1.force
+    '''
+    def velocities(self):
+        tmp1=self.p1.currentVel
+        tmp2=self.p2.currentVel
 
-    def velocity(self, particle):
-        # velocity vector = (force vector * time step)/mass + initial velocity vector
-        self.particle = particle
-        vx = ((particle.forces[0]*TIMESTEP)/particle.mass)+particle.initialVel[0]
-        vy = ((particle.forces[1]*TIMESTEP)/particle.mass)+particle.initialVel[1]
-        vz = ((particle.forces[2]*TIMESTEP)/particle.mass)+particle.initialVel[2]
+        for i in range(0, 3):
+            self.p1.currentVel[i]=(
+                    self.p1.forces[i]
+                    *TIMESTEP
+                    /self.p1.mass
+                    +self.p1.initialVel[i]
+                    )
+        for i in range(0, 3):
+            self.p2.currentVel[i]=(
+                    self.p2.forces[i]
+                    *TIMESTEP
+                    /self.p2.mass
+                    +self.p2.initialVel[i]
+                    )
 
-        particle.currentVel = [vx, vy, vz]
-        return particle.currentVel 
+        self.p1.initialVel=tmp1
+        self.p2.initialVel=tmp2
 
-    def updatePosition(self, particle):
-        self.particle = particle
-        dx = particle.currentVel[0] * TIMESTEP
-        dy = particle.currentVel[1] * TIMESTEP
-        dz = particle.currentVel[2] * TIMESTEP
-        # might be dumb but where to go from here? it's 3:45AM and i'm sleepy
+    def positions(self):
+        tmp1=self.p1.currentPos
+        tmp2=self.p2.currentPos
 
+        for i in range(0,3):
+            self.p1.currentPos[i]=(
+                    self.p1.currentVel[i]
+                    *TIMESTEP
+                    +self.p1.initialPos[i]
+                    )
+        for i in range(0,3):
+            self.p2.currentPos[i]=(
+                    self.p2.currentVel[i]
+                    *TIMESTEP
+                    +self.p2.initialPos[i]
+                    )
 
-    # returns two forces, that of p1 on p2 and that of p2 on p1
-    # e.g. [[p1fx, p1fy, p1fz], [p2fx, p2fy, p2fz]]
-    def accumulateForces(self, p1, p2):
-        return [self.coulomb(p1,p2), self.coulomb(p2, p1)]
+        self.p1.initialPos=tmp1
+        self.p2.initialPos=tmp2
+    '''
+
+def main():
+    # standard electric charge of proton, -e for electron
+    e = 1.602*math.pow(10, -19)
+
+    proton   = Particle(e, 1.6726219*math.pow(10, -27), [0,0,0], [1,0,0])
+    electron = Particle(-e, 9.10938356*math.pow(10, -31), [0,0,0], [0,0,0])
+    
+    simulation = Simulation(proton, electron)
+    simulation.forces()
+
+    print("Force from proton to electron: %s" %proton.force)
+    print("Force from electron to proton: %s" %electron.force)
+
+if __name__ == '__main__':
+    main()
 
 '''
 The simulation will be visualized using a 3D plot at a later time
