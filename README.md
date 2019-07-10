@@ -1,4 +1,3 @@
-# Particles
 ## Usage:
 Particle creation depends on the `numpy` library for velocity and position vectors `v_i, p_i`, e.g. `v1_i = np.array([3,1,-2])`
 
