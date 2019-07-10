@@ -108,14 +108,6 @@ def main():
 
 if __name__ == '__main__':
     main()
-else:
-    print("Usage:")
-    print("p = particles.Particle(Q, m, v_i, u_i)\n")
-    print("where\tv_i = [vi_x, vi_y, vi_z],\
-            \n\tu_i = [x_i, y_i, z_i],")
-    print("\tand are defined as 3x1 numpy arrays\
-            \n\t\te.g. v_i = np.ones([3,1])")
-    print("\nsim=Simulation(p1,p2,time,steps=1000)")
 
 '''
 The simulation will be visualized using a 3D plot at a later time
