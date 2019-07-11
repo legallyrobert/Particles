@@ -7,10 +7,10 @@ proton   = Particle(charge, mass, v1_i, p1_i)
 electron = Particle(charge, mass, v2_i, p2_i)
 ````
 
-Movements of the particles are simulated over `t` time, incremented over `s` steps in `t`. By default, `s=1000` for 1000 iterations through `t`. For a "smoother" simulation, increase `s` with `t`.
+Movements of the particles are simulated over `t` time, incremented over `s` steps in `t`. By default, `s=t*1000` for a relatively high resolution.
 
 e.g.
 ````python
-sim = Simulation(proton, electron, t, s=1000)
+sim = Simulation(proton, electron, t, s=t*1000)
 sim.simulate()
 ````
