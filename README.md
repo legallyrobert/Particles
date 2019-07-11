@@ -1,5 +1,5 @@
 ## Usage:
-Particle creation depends on the `numpy` library for creating velocity and position vectors `v_i, p_i`, e.g. `v1_i = np.array([1,3,])`
+Particle creation depends on the `numpy` library for creating velocity and position vectors `v_i, p_i`, e.g. `v1_i = np.array([1,3])`
 
 e.g.
 ````python
