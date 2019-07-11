@@ -77,7 +77,7 @@ class Simulation(object):
         self.p1=p1
         self.p2=p2
         self.time=time
-        self.steps=steps
+        self.steps=time*1000
         self.timerange=np.linspace(0,time,steps)
 
     def simulate(self):
@@ -94,23 +94,22 @@ class Simulation(object):
 
 def main():
     #Initial velocity np arrays
-    v1,v2=np.zeros([1,3]),np.zeros([1,3])
+    v1=np.array([[1,2,0]])
+    v2=np.array([[-3,0,1]])
 
     #Initial position np arrays
-    p1,p2=np.zeros([1,3]),np.zeros([1,3])
-
-    #Set velocity and position
-    v1[0][0],p1[0][0]=1,1
+    p1=np.array([[0.1,-0.2,0.4]])
+    p2=np.array([[0.0,0.0,0.0]])
 
     proton=Particle(sci.e,sci.m_p,v1,p1)
     electron=Particle(-sci.e,sci.m_e,v2,p2)
     
-    t,s=1,100
+    t=2
 
-    sim=Simulation(proton,electron,t,s)
+    sim=Simulation(proton,electron,t)
     sim.simulate()
 
-    print("After",s,"iterations over",t,"seconds:")
+    print("After",sim.steps,"iterations over",t,"seconds:")
     print("Final position of proton   ",proton.currentPos)
     print("Final position of electron ",electron.currentPos)
 
