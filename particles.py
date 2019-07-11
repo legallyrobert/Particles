@@ -2,6 +2,7 @@
 import numpy as np
 from scipy import constants as sci
 
+
 class Particle(object):
 
     #Coulomb's constant
@@ -11,7 +12,7 @@ class Particle(object):
         self.charge=charge
         self.mass=mass
 
-        self.force=np.zeros([3,1])
+        self.force=np.zeros([1,3])
 
         self.previousVel=previousVel
         self.currentVel=previousVel
@@ -42,19 +43,19 @@ class Particle(object):
     def magnetism(self,p2):
         top=(sci.mu_0*self.charge*np.cross(
             self.currentVel,
-            self.r_hat(p2)/self.r(p2),
-            axis=0
+            self.r_hat(p2),
+            axis=1
             ))
         bottom=(4*sci.pi*np.power(self.r(p2),2))
         B=top/bottom
 
-        F=(self.charge*np.cross(
-            self.currentVel,
+        F=(p2.charge*np.cross(
+            p2.currentVel,
             B,
-            axis=0
+            axis=1
             ))
 
-        self.force=np.add(self.force,F)
+        p2.force=np.add(p2.force,F)
 
     def accumulateForces(self,p2):
         self.coulomb(p2)
@@ -90,21 +91,28 @@ class Simulation(object):
             self.p1.updatePosition(i)
             self.p2.updatePosition(i)
 
+
 def main():
     #Initial velocity np arrays
-    v1,v2=np.zeros([3,1]),np.zeros([3,1])
+    v1,v2=np.zeros([1,3]),np.zeros([1,3])
 
     #Initial position np arrays
-    p1,p2=np.zeros([3,1]),np.zeros([3,1])
+    p1,p2=np.zeros([1,3]),np.zeros([1,3])
 
     #Set velocity and position
-    v1[0],p1[0]=1,1
+    v1[0][0],p1[0][0]=1,1
 
     proton=Particle(sci.e,sci.m_p,v1,p1)
     electron=Particle(-sci.e,sci.m_e,v2,p2)
     
-    sim=Simulation(proton,electron,1,100)
+    t,s=1,100
+
+    sim=Simulation(proton,electron,t,s)
     sim.simulate()
+
+    print("After",s,"iterations over",t,"seconds:")
+    print("Final position of proton   ",proton.currentPos)
+    print("Final position of electron ",electron.currentPos)
 
 if __name__ == '__main__':
     main()
