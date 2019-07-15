@@ -8,7 +8,7 @@ class Particle(object):
     #Coulomb's constant
     K=1/(4*sci.pi*sci.epsilon_0)
 
-    def __init__(self,charge,mass,previousVel,previousPos):
+    def __init__(self,charge,mass,previousVel,previousPos,static=False):
         self.charge=charge
         self.mass=mass
 
@@ -20,7 +20,7 @@ class Particle(object):
         self.previousPos=previousPos
         self.currentPos=previousPos
 
-        self.static=False   #currently unimplemented
+        self.static=static   #currently unimplemented
 
     def d(self,p2):
         return np.subtract(self.currentPos,p2.currentPos)
@@ -63,14 +63,20 @@ class Particle(object):
         return self.force
 
     def updateVelocity(self,t):
-        tmp=self.currentVel
-        self.currentVel=(self.force*t/self.mass+self.previousVel)
-        self.previousVel=tmp
+        if not self.static:
+            tmp=self.currentVel
+            self.currentVel=(self.force*t/self.mass+self.previousVel)
+            self.previousVel=tmp
+        else:
+            self.currentVel=self.previousVel
 
     def updatePosition(self,t):
-        tmp=self.currentPos
-        self.currentPos=(self.currentVel*t+self.previousPos)
-        self.previousPos=tmp
+        if not self.static:
+            tmp=self.currentPos
+            self.currentPos=(self.currentVel*t+self.previousPos)
+            self.previousPos=tmp
+        else:
+            self.currentPos=self.previousPos
 
 class Simulation(object):
     def __init__(self,p1,p2,time,steps=1000):
@@ -101,7 +107,7 @@ def main():
     p1=np.array([[0.1,-0.2,0.4]])
     p2=np.array([[0.0,0.0,0.0]])
 
-    proton=Particle(sci.e,sci.m_p,v1,p1)
+    proton=Particle(sci.e,sci.m_p,v1,p1,True)
     electron=Particle(-sci.e,sci.m_e,v2,p2)
     
     t=2
