@@ -11,6 +11,7 @@ class Particle(object):
     def __init__(self,charge,mass,previousVel,previousPos,static=False):
         self.charge=charge
         self.mass=mass
+        self.reducedMass=0
 
         self.force=np.zeros([1,3])
 
@@ -30,6 +31,10 @@ class Particle(object):
 
     def r_hat(self,p2):
         return np.divide(self.d(p2),self.r(p2))
+
+    def reduceMasses(self,p2):
+        self.reducedMass=p2.reducedMass=\
+                np.divide(self.mass*p2.mass,self.mass+p2.mass)
 
     def coulomb(self,p2):
         top=(self.K*self.charge*p2.charge*(
@@ -65,7 +70,7 @@ class Particle(object):
     def updateVelocity(self,t):
         if not self.static:
             tmp=self.currentVel
-            self.currentVel=(self.force*t/self.mass+self.previousVel)
+            self.currentVel=(self.force*t/self.reducedMass+self.previousVel)
             self.previousVel=tmp
         else:
             self.currentVel=self.previousVel
@@ -87,6 +92,10 @@ class Simulation(object):
         self.timerange=np.linspace(0,time,steps)
 
     def simulate(self):
+        self.p1.reduceMasses(self.p2)
+
+        outfile=open('out.txt','w')
+
         for i in self.timerange:
             self.p1.accumulateForces(self.p2)
             self.p2.accumulateForces(self.p1)
@@ -95,25 +104,39 @@ class Simulation(object):
             self.p2.updateVelocity(i)
 
             self.p1.updatePosition(i)
+            outfile.write(
+                    str(i)+" "+
+                    str(self.p1.currentPos[0,0])+" "+
+                    str(self.p1.currentPos[0,1])+" "+
+                    str(self.p1.currentPos[0,2])+"\n")
             self.p2.updatePosition(i)
+            outfile.write(
+                    str(i)+" "+
+                    str(self.p2.currentPos[0,0])+" "+
+                    str(self.p2.currentPos[0,1])+" "+
+                    str(self.p2.currentPos[0,2])+"\n")
+
+        outfile.close()
 
 
 def main():
     #Initial velocity np arrays
-    v1=np.array([[1,2,0]])
-    v2=np.array([[-3,0,1]])
+    v1=np.array([[0,0,0]])
+    v2=np.array([[0.1,0.1,0.1]])
 
     #Initial position np arrays
-    p1=np.array([[0.1,-0.2,0.4]])
-    p2=np.array([[0.0,0.0,0.0]])
+    p1=np.array([[0.0,0.0,0.0]])
+    p2=np.array([[0.1,0.1,0.1]])
 
-    proton=Particle(sci.e,sci.m_p,v1,p1,True)
+    proton=Particle(sci.e,sci.m_p,v1,p1)
     electron=Particle(-sci.e,sci.m_e,v2,p2)
     
-    t=2
+    t=1
 
     sim=Simulation(proton,electron,t)
     sim.simulate()
+
+    print("Reduced mass of system: ",proton.reducedMass, electron.reducedMass)
 
     print("After",sim.steps,"iterations over",t,"seconds:")
     print("Final position of proton   ",proton.currentPos)
