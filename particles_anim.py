@@ -19,21 +19,21 @@ title=ax.set_title('Particle Simulation')
 
 data=df[df['t']==0]
 
-ax.set_xlim3d(0,20000)
+ax.set_xlim3d(df['x'].min(),df['x'].max())
 ax.set_xlabel('X')
-ax.set_ylim3d(0,20000)
+ax.set_ylim3d(df['x'].min(),df['y'].max())
 ax.set_ylabel('Y')
-ax.set_zlim3d(0,20000)
+ax.set_zlim3d(df['x'].min(),df['z'].max())
 ax.set_zlabel('Z')
 
 graph, = ax.plot(data.x, data.y, data.z, linestyle="", marker="o")
 
-time=np.linspace(0,1,1000)
+time=df['t']
 
 ani = matplotlib.animation.FuncAnimation(fig, 
         update_graph, 
         time, 
-        interval=5,
+        interval=1,
         blit=True
         )
 
